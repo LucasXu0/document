@@ -1,11 +1,11 @@
 # AppFlowy Editor Design Document
 
-> This document describes the technical design of AppFlowy Editor.
+> This document describes the technical design of the AppFlowy Editor.
 > 
 
 [AppFlowy](https://github.com/AppFlowy-IO/AppFlowy) is an open-source alternative to Notion built with Rust and Flutter. 
 
-An `editor` is a core component in AppFlowy. In many scenarios, such as Document, Grid, and Board, we need the `editor` component to support certain corresponding business requirements. Therefore, we need an editor that will support all of AppFlowy's use cases.
+An `editor` is a core component in AppFlowy. In many scenarios, such as Document, Grid, and Board, the current `editor` component is unable to support certain business requirements. We are therefore seeking an editor that will support all of AppFlowy's use cases.
 
 ## Issues with the Editor Component
 
@@ -23,11 +23,13 @@ In the process of using this library,  we encountered the following problems:
 
 We have been actively looking for alternatives in the open-source community, such as [super_editor](https://pub.dev/packages/super_editor). 
 
-During our research, we found that super_editor allows for extending new components in a way that can also support customized shortcuts. However, its data structure is a list that does not support nesting, which is not appropriate for nodes with parent-child relationships. For example, in the case of multi-level lists the form of each level is inconsistent. 
+During our research, we found that super_editor allows for extending new components in a way that can also support customized shortcuts. 
+
+However, its data structure is a list that does not support nesting, which is not appropriate for nodes with parent-child relationships. For example, in the case of multi-level lists the form of each level is inconsistent. 
 
 To date, we still haven't found a solution that suits our needs.
 
-For the above reasons, we decided to design and develop the new `editor` component, AppFlowy Editor.
+For the above reasons, we decided to design and develop the new `editor` component, the AppFlowy Editor.
 
 ---
 
@@ -35,7 +37,9 @@ For the above reasons, we decided to design and develop the new `editor` compone
 
 Before starting a new `editor` project, we'll examine some existing editor implementations. There are not many editor projects based on Flutter, so we'll also refer to well-known front-end editor implementations, such as Quill.js and Slate.js.
 
-We believe that the foundation of the editor lies in *the design of the data structure*. `Quill.js` uses [Delta](https://quilljs.com/docs/delta/) as the data structure, while `Slate.js` uses tree nodes as the data structure. Ultimately we have elected to use a tree node like `Slate.js` to assemble the documents, while continuing to use `Delta` for the data storage of text nodes.
+We believe that the foundation of the editor lies in *the design of the data structure*. 
+
+**Quill.js** uses [Delta](https://quilljs.com/docs/delta/) as the data structure, while **Slate.js** uses tree nodes as the data structure. Ultimately we have elected to use a tree node like Slate.js to assemble the documents, while continuing to use Delta for the data storage of text nodes.
 
 ### Why Use a Combination of Node Tree and Delta?
 
@@ -50,6 +54,7 @@ Why do we still use Delta for the text node?
  - The ability to export a text change delta is already supported in Flutter, so it is easy to substitute the Flutter text change delta to `Delta`.
  - Considering that our previous version is using flutter-quill as the editor component, it is simpler to keep Delta for text nodes in doing a data migration.
 
+### Code Example 
 The following JSON will be used to describe the above-combined data structure.
 
 ![Combined Data Structure Example](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled.png)
@@ -67,27 +72,32 @@ We will state the design of AppFlowy Editor through the following three aspects.
 2. How to update the data? (keywords: Position, Path, Operation, Transaction, EditorState, Apply)
 3. How to render widgets through the data? (keywords: Render Plugins)
 
-### Editor Data Structures
+### Editor Data Structure
 
 AppFlowy Editor treats a document as a collection of nodes. For example, a paragraph is a `TextNode` and an image is an `ImageNode`.
 
-A node must contain the fields below.
+#### Required Node Fields
+A node must contain the fields listed below.
 
-**Type**
+##### Type
+The `Type` field is used to find the renderer and control how to serialize and deserialize the current node
 
-It is used to find the renderer and control how to serialize and deserialize the current node
+##### Attributes
+The `Atttributes` field indicates what data should be presented and synced. An `ImageNode`, for example, uses the `image_src` in its attributes to describe the link where to load the image.
 
-**Attributes**
+##### Children**
+The `Children` field indicates the children nodes, such as the embedded bulleted list or the block in the table component.
 
-Indicates what data should be presented and synced. An `ImageNode`, for example, uses the `image_src` in its attributes to describe the link where to load the image.
+##### Delta
+The [Delta](https://quilljs.com/docs/delta/) field will only be used for instances of `TextNode`.
 
-**Children**
+As mentioned above, AppFlowy Editor will use Delta to describe the information of the text node, which is not repeated here.
 
-Indicates the children nodes. Such as the embedded bulleted list or the block in the table component.
+It should be additionally noted that styles such as headings, references, or lists of text nodes, overall paragraph style rather than a part of the text, are described using Attributes.
 
-**[Delta](https://quilljs.com/docs/delta/)**
+Since these styles are descriptions of paragraphs rather than individual text styles, so we use `Attributes` to describe them instead of `Delta`.
 
-Only be used for `TextNode`. As mentioned above, AppFlowy Editor will use Delta to describe the information of the text node, which is not repeated here. It should be additionally noted that styles such as headings, references, or lists of text nodes, overall paragraph style rather than a part of the text, are described using Attributes. Since these styles are descriptions of paragraphs rather than individual text styles, so we use `Attributes` to describe them instead of `Delta`.
+### Example Node Definition
 
 Definition of a `Node` in Dart.
 
@@ -116,7 +126,7 @@ class TextNode extends Node {
 
 In the following figure, for example, there is an image node and a text node in the document.
 
-![JSON Example](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%201.png)
+![Image and Text Node Example](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%201.png)
 
 The JSON representation of `ImageNode`'s data is
 
@@ -141,11 +151,13 @@ And the JSON representation of `TextNode`'s data is
 }
 ```
 
-We use `LinkedList` to organize the relationship between nodes, which provides a relatively efficient way to insert and delete nodes. Each node uses a normalized description, so we can easily describe those nodes in JSON.
+We use `LinkedList` to organize the relationship between nodes, which provides a relatively efficient way to insert and delete nodes.
+
+Each node uses a normalized description, so we can easily describe those nodes in JSON.
 
 In the following figure, for example, there is an embedded unordered list in the document
 
-![JSON Example](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%202.png)
+![Unordered List Example](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%202.png)
 
 And the JSON representation for the document is
 
@@ -197,7 +209,7 @@ typedef Path = List<int>;
 
 There is an example below.
 
-![Document Example](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%203.png)
+![Nexted List Path Example](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%203.png)
 
 The path of the first node A is `[0]`, then the path of the next node A1 is `[0, 0]`, and so on ...
 
@@ -242,7 +254,7 @@ Selection(
 )
 ```
 
-Selection is directional.
+Note that selection is directional.
 
 For example, in the case of top-down selection, the selection is
 
@@ -361,7 +373,7 @@ Take the node C in the above figure as an example. Converting the type of the no
 
 ##### Transaction
 
-AppFlowy Editor uses `transaction` to describe an atomic change to the document, which consists of a collection of operations and changes to the selection before and after.
+The AppFlowy Editor uses `Transaction` to describe an set of changes to the document which must be treated as atomic.  It consists of a collection of `Operations` and changes to the selection before and after.
 
 ```dart
 class Transaction {
@@ -371,7 +383,7 @@ class Transaction {
 }
 ```
 
-The purpose of using `transaction` is to apply a collection of continuous operations that cannot be split apart. For example, in the following case:
+The purpose of using `transaction` is to apply a collection of sequential operations that cannot be split apart. For example, in the following case:
 
 ![Transaction Example 1](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%205.png)
 
@@ -412,7 +424,7 @@ It can be described in JSON
 
 ##### EditorState and Apply
 
-EditorState is responsible for managing the state of the document. It holds the `Document`, and updates the document data through `apply` function.
+`EditorState` is responsible for managing the state of the document. It holds the `Document`, and updates the document data through the `apply` function.
 
 ```dart
 class EditorState {
@@ -422,11 +434,11 @@ class EditorState {
 
 #### Summary of How Data Changes
 
-1. `EditorState` holds the `Document`, and `Document` is a collection of `Node`objects.
+1. `EditorState` holds the `Document`, and `Document` is a collection of `Node` objects.
 2. The end-user manipulates a `Node` to generate a `Selection` and `Operations`, which form a `Transaction`.
 3. Apply `Transaction` to `EditorState` to refresh the `Document`.
 
-![Untitled](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%207.png)
+![Editor Comonponent Diagram](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%207.png)
 
 ### Rendering Widgets Using the Data
 
@@ -444,7 +456,9 @@ abstract class NodeWidgetBuilder<T extends Node> {
 }
 ```
 
-Each node owns its corresponding `NodeWidgetBuilder`. Before initializing AppFlowy Editor, we need to inject the mapping relationship between `Node` and `NodeWidgetBuilder`.
+Each node owns its corresponding `NodeWidgetBuilder`.
+
+Before initializing AppFlowy Editor, we need to inject the mapping relationship between `Node` and `NodeWidgetBuilder`.
 
 For now, AppFlowy Editor’s built-in `NodeWidgetBuilder` includes the following
 
@@ -461,35 +475,37 @@ NodeWidgetBuilders defaultBuilders = {
 };
 ```
 
-When AppFlowy Editor starts to render the `Node`s, it will first recursively traverse the `Document`. For each `Node` it encounters, the editor will find the corresponding `NodeWidgetBuilder` from the mapping relationship according to the nodes’ type and then call the `build` function to generate a `Widget`.
+When AppFlowy Editor starts to render the `Node`s, it will first recursively traverse the `Document`.
+
+For each `Node` it encounters, the editor will find the corresponding `NodeWidgetBuilder` from the mapping relationship according to the nodes’ type and then call the `build` function to generate a `Widget`.
 
 ![Untitled](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%208.png)
 
-Meanwhile, each `NodeWidgetBuilder` is bound to `Node` through `ChangeNotifierProvider`. Combined with the above-mentioned logic of `Document` data change, whenever the data of a certain node changes, AppFlowy Editor will notify `NodeWidgetBuilder` to refresh in time.
+Meanwhile, each `NodeWidgetBuilder` is bound to `Node` through `ChangeNotifierProvider`. Combined with the above-mentioned logic of `Document` data change, whenever the data of a certain node changes, AppFlowy Editor will notify `NodeWidgetBuilder` to refresh in real-time.
 
 ## Summary
 
-Finally, let’s answer the question mentioned at the beginning of the article, ‘Why do we need to design and develop our editor’?
+Finally, let’s answer the question mentioned at the beginning of the article, "Why do we need to design and develop our editor?"
 
-> Hard to quickly extend new components (plug-ins), such as the need to insert Grid and Board into the existing document.
+> It's difficult to quickly extend new components (plug-ins), such as the need to insert Grid and Board into the existing document.
 > 
 
-Based on the existing data structure of AppFlowy Editor, we only need to define a new node with a new type and define the corresponding `NodeWidgetBuilder` to render Grid and Board in AppFlowy Editor.
+Based on the existing data structure of AppFlowy Editor, we only need to define a new node with a new type and define the corresponding `NodeWidgetBuilder` to render Grid and Board in the AppFlowy Editor.
 
 > Inability to extend more shortcuts, such as markdown syntax support and shortcuts for key combinations (likes meta + shift + option + key).
 > 
 
-AppFlowy Editor supports [customizing more shortcuts](https://github.com/AppFlowy-IO/AppFlowy/blob/main/frontend/app_flowy/packages/appflowy_editor/documentation/customizing.md#customize-a-shortcut-event).
+The AppFlowy Editor supports [customizing more shortcuts](https://github.com/AppFlowy-IO/AppFlowy/blob/main/frontend/app_flowy/packages/appflowy_editor/documentation/customizing.md#customize-a-shortcut-event).
 
 > Inability to support a self-consistent context production process, such as inserting new components via slash command or toolbar.
 > 
 
-AppFlowy Editor supports customizing toolbar items and slash menu to support a self-consistent content production process.
+The AppFlowy Editor supports customizing toolbar items and slash menu to support a self-consistent content production process.
 
 > Lack of stable performance and sufficient code coverage.
 > 
 
-For now, the code coverage of AppFlowy Editor is stable at 79 to 80%. Meanwhile, we try to make sure to fix known issues and add new test cases to cover them.
+For now, the code coverage of the AppFlowy Editor is stable at 79 to 80%. Meanwhile, we try to make sure to fix known issues and add new test cases to cover them.
 
 > Embeddable data structure
 > 
