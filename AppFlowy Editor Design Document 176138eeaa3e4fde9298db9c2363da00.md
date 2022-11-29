@@ -76,6 +76,10 @@ We will state the design of AppFlowy Editor through the following three aspects.
 
 AppFlowy Editor treats a document as a collection of nodes. For example, a paragraph is a `TextNode` and an image is an `ImageNode`.
 
+We use `LinkedList` to organize the relationship between nodes, which provides a relatively efficient way to insert and delete nodes.
+
+Each node uses a normalized description, so we can easily describe those nodes in JSON.
+
 #### Required Node Fields
 A node must contain the fields listed below.
 
@@ -97,9 +101,9 @@ It should be additionally noted that styles such as headings, references, or lis
 
 Since these styles are descriptions of paragraphs rather than individual text styles, so we use `Attributes` to describe them instead of `Delta`.
 
-### Example Node Definition
+### Example Node Definitions
 
-Definition of a `Node` in Dart.
+Below is the definition of a `Node` in Dart.
 
 ```dart
 class Node extends ChangeNotifier with LinkedListEntry<Node> {
@@ -112,7 +116,7 @@ class Node extends ChangeNotifier with LinkedListEntry<Node> {
 }
 ```
 
-Definition of TextNode in Dart.
+While this is an xample definition of a `TextNode` in Dart.
 
 ```dart
 class TextNode extends Node {
@@ -124,7 +128,9 @@ class TextNode extends Node {
 }
 ```
 
-In the following figure, for example, there is an image node and a text node in the document.
+#### Image and Text Node Example
+
+In the following figure, there is an image node and a text node in the document.
 
 ![Image and Text Node Example](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%201.png)
 
@@ -151,11 +157,9 @@ And the JSON representation of `TextNode`'s data is
 }
 ```
 
-We use `LinkedList` to organize the relationship between nodes, which provides a relatively efficient way to insert and delete nodes.
+#### Unordered List Example
 
-Each node uses a normalized description, so we can easily describe those nodes in JSON.
-
-In the following figure, for example, there is an embedded unordered list in the document
+In the following figure you can see an example of an embedded unordered list in the document
 
 ![Unordered List Example](AppFlowy%20Editor%20Design%20Document%20176138eeaa3e4fde9298db9c2363da00/Untitled%202.png)
 
