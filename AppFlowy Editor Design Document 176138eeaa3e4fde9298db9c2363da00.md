@@ -199,6 +199,11 @@ Before we update the data, we must know which part of the data need to be update
 
 #### Locating Nodes
 
+Nodes may be located in a variety of manners including:
+ * [Path](#path)
+ * [Position](#position)
+ * [Selection](#selection)
+
 ##### Path
 
 AppFlowy Editor uses `Path` to locate the position of a node. Path is an integer array consisting of its position in its ancestor's node and the position of its ancestors. All data change operations are performed based on the Path.
@@ -280,10 +285,10 @@ AppFlowy Editor uses `Operation` objects to manipulate the document data instead
 
 The operations defined in AppFlowy Editor include
 
-- Insert
-- Delete
-- Update
-- UpdateText
+- [Insert](#insert)
+- [Delete](#delete)
+- [Update](#update)
+- [UpdateText](#updatetext)
 
 Each operation has a corresponding reverse operation that is applied to undo and redo.
 
@@ -371,9 +376,9 @@ Take the node C in the above figure as an example. Converting the type of the no
 
 [https://github.com/quilljs/delta](https://github.com/quilljs/delta)
 
-##### Transaction
+#### Transactions
 
-The AppFlowy Editor uses `Transaction` to describe an set of changes to the document which must be treated as atomic.  It consists of a collection of `Operations` and changes to the selection before and after.
+The AppFlowy Editor uses a `Transaction` to describe an set of changes to the document which must be treated as atomic.  It consists of a collection of `Operations` and changes to the selection before and after.
 
 ```dart
 class Transaction {
@@ -422,7 +427,7 @@ It can be described in JSON
 }
 ```
 
-##### EditorState and Apply
+#### EditorState and Apply
 
 `EditorState` is responsible for managing the state of the document. It holds the `Document`, and updates the document data through the `apply` function.
 
