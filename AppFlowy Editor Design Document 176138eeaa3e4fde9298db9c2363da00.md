@@ -9,7 +9,7 @@ An `editor` is a core component in AppFlowy. In many scenarios, such as Document
 
 ## Issues with the Editor Component
 
-We have concluded that we need to design and develop our editor for AppyFlow.
+We have concluded that we need to design and develop our editor for AppFlowy.
 
 In the previous version, we integrated [flutter_quill](https://pub.dev/packages/flutter_quill) as the `editor` component. 
 
@@ -116,7 +116,7 @@ class Node extends ChangeNotifier with LinkedListEntry<Node> {
 }
 ```
 
-While this is an xample definition of a `TextNode` in Dart.
+While this is an example definition of a `TextNode` in Dart.
 
 ```dart
 class TextNode extends Node {
