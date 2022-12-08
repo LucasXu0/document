@@ -15,17 +15,20 @@ In the previous version, we integrated [flutter_quill](https://pub.dev/packages/
 
 In the process of using this library,  we encountered the following problems:
 
-- ~~Hard to quickly extend new components (plug-ins), such as the need to insert Grid and Board into the existing document.~~
+- Hard to quickly extend new components, such as the need to insert Grid and Board into the existing document.
 - The inability to extend more shortcuts, such as markdown syntax support and shortcuts for key combinations (meta + shift + option + key).
 - The inability to support a self-consistent context production processes, such as inserting new components via slash command or floating toolbar.
-- ~~Lack of stable performance and sufficient code coverage.~~
 - A lack of sufficient code coverage.
+
+> The problems metioned above maybe have been optimized in newly version.
 
 We have been actively looking for alternatives in the open-source community, such as [super_editor](https://pub.dev/packages/super_editor). 
 
 During our research, we found that super_editor allows for extending new components in a way that can also support customized shortcuts. 
 
 However, its data structure is a list that does not support nesting, which is not appropriate for nodes with parent-child relationships. For example, in the case of multi-level lists the form of each level is inconsistent. 
+
+Another important reason is that we need an editor with higher customization requirements, furthermore, an editor that can keep up with the times and serve the functions of our product - AppFlowy.
 
 To date, we still haven't found a solution that suits our needs.
 
@@ -44,7 +47,7 @@ We believe that the foundation of the editor lies in *the design of the data str
 ### Why Use a Combination of Node Tree and Delta?
 
 Why do we use a node tree?
- - The entirety of the document data is described using a single Delta data which does not allow us to easily describe complex nested scenes. ~~Both updates and conflicts need to be updated for the full delta data when handling updates.~~
+ - The entirety of the document data is described using a single Delta data which does not allow us to easily describe complex nested scenes.
   - When there is an issue with a paragraph or document, restoring the document becomes relatively difficult.
 
 So our preference is to use a node tree like `Slate.js` to describe the document in chunks, where each chunk’s additions, deletions, and modifications only affect the changes to the current node.
@@ -522,5 +525,8 @@ For now, the code coverage of the AppFlowy Editor is stable at 79 to 80%. Meanwh
 As mentioned above, AppFlowy Editor uses LinkedList to support the embeddable data structure.
 
 ## Questionnaire
+
+* Which part of the editor do you want to know more about?
+* Do you have more suggestions for our design?
 
 …
