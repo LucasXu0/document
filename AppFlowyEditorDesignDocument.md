@@ -76,7 +76,7 @@ Why do we still use Delta for the text node?
 ### Code Example 
 The following JSON will be used to describe the above-combined data structure.
 
-![Combined Data Structure Example](AppFlowyEditorDesignDocument/0.png)
+![Combined Data Structure Example](https://raw.githubusercontent.com/LucasXu0/document/main/AppFlowyEditorDesignDocument/0.png)
 
 - For the text node (with a type equal to `text`), the editor will use Delta to store the data.
 - For the others (non-text nodes), the editor will use Attributes to store the data.
@@ -149,7 +149,7 @@ class TextNode extends Node {
 
 In the following figure, there is an image node and a text node in the document.
 
-![Image and Text Node Example](AppFlowyEditorDesignDocument/1.png)
+![Image and Text Node Example](https://raw.githubusercontent.com/LucasXu0/document/main/AppFlowyEditorDesignDocument/1.png)
 
 The JSON representation of `ImageNode`'s data is
 
@@ -178,7 +178,7 @@ And the JSON representation of `TextNode`'s data is
 
 In the following figure you can see an example of an embedded unordered list in the document
 
-![Unordered List Example](AppFlowyEditorDesignDocument/2.png)
+![Unordered List Example](https://raw.githubusercontent.com/LucasXu0/document/main/AppFlowyEditorDesignDocument/2.png)
 
 And the JSON representation for the document is
 
@@ -235,7 +235,7 @@ typedef Path = List<int>;
 
 There is an example below.
 
-![Nexted List Path Example](AppFlowyEditorDesignDocument/3.png)
+![Nexted List Path Example](https://raw.githubusercontent.com/LucasXu0/document/main/AppFlowyEditorDesignDocument/3.png)
 
 The path of the first node A is `[0]`, then the path of the next node A1 is `[0, 0]`, and so on ...
 
@@ -271,7 +271,7 @@ class Selection {
 
 For example, We need to locate the selection range as shown below.
 
-![Selecting a Range](AppFlowyEditorDesignDocument/4.png)
+![Selecting a Range](https://raw.githubusercontent.com/LucasXu0/document/main/AppFlowyEditorDesignDocument/4.png)
 
 Then the selection is:
 
@@ -413,9 +413,9 @@ class Transaction {
 
 The purpose of using `transaction` is to apply a collection of sequential operations that cannot be split apart. For example, in the following case:
 
-![Transaction Example 1](AppFlowyEditorDesignDocument/5.png)
+![Transaction Example 1](https://raw.githubusercontent.com/LucasXu0/document/main/AppFlowyEditorDesignDocument/5.png)
 
-![Transaction Example 2](AppFlowyEditorDesignDocument/6.png)
+![Transaction Example 2](https://raw.githubusercontent.com/LucasXu0/document/main/AppFlowyEditorDesignDocument/6.png)
 
 Pressing the enter key in front of `AppFlowy!` will actually produce two consecutive operations.
 
@@ -466,7 +466,7 @@ class EditorState {
 2. The end-user manipulates a `Node` to generate a `Selection` and `Operations`, which form a `Transaction`.
 3. Apply `Transaction` to `EditorState` to refresh the `Document`.
 
-![Editor Comonponent Diagram](AppFlowyEditorDesignDocument/7.png)
+![Editor Comonponent Diagram](https://raw.githubusercontent.com/LucasXu0/document/main/AppFlowyEditorDesignDocument/7.png)
 
 ### Rendering Widgets Using the Data
 
@@ -507,7 +507,7 @@ When AppFlowy Editor starts to render the `Node`s, it will first recursively tra
 
 For each `Node` it encounters, the editor will find the corresponding `NodeWidgetBuilder` from the mapping relationship according to the nodes’ type and then call the `build` function to generate a `Widget`.
 
-![Node Builder Widget Infrastructure](AppFlowyEditorDesignDocument/8.png)
+![Node Builder Widget Infrastructure](https://raw.githubusercontent.com/LucasXu0/document/main/AppFlowyEditorDesignDocument/8.png)
 
 Meanwhile, each `NodeWidgetBuilder` is bound to `Node` through `ChangeNotifierProvider`. Combined with the above-mentioned logic of `Document` data change, whenever the data of a certain node changes, AppFlowy Editor will notify `NodeWidgetBuilder` to refresh in real-time.
 
